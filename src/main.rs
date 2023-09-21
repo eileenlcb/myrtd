@@ -1,4 +1,8 @@
 #![allow(unused)]
+mod model;
+mod service;
+mod storage;
+
 use clap::{Parser, ValueEnum};
 #[derive(Parser, Debug)]
 struct Args{
@@ -15,5 +19,11 @@ enum ListType{
 
 fn main(){
     let args = Args::parse();
-    println!("{:?}", args);
+    
+    if let Some(name) = args.add{
+        match service::add_item(&name){
+            Ok(s) => println!("Added item: {}", s),
+            Err(e) => println!("Error: {}", e),
+        }
+    }
 }
