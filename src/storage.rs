@@ -24,9 +24,14 @@ struct Csv{
     file:File,
 }
 
-// pub fn get_max_id() -> Result<u32>{
-//     let max_id = 
-// }
+pub fn get_max_id() -> Result<u32>{
+    let max_id = get_all()?
+        .iter()
+        .map(|item| item.id)
+        .max()
+        .unwrap_or(0);
+    Ok(max_id)
+}
 
 pub fn get_all() -> Result<Vec<Item>>{
     Ok(Csv::new()?

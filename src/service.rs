@@ -4,7 +4,7 @@ use std::{error::Error, fmt::Display};
 use std::io;
 
 pub fn add_item(name: &str) -> Result<String,io::Error> {
-    let max_id = 999;
+    let max_id = storage::get_max_id()?;
     let item = Item::new(
         max_id + 1,
         name,
