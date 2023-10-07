@@ -7,7 +7,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{self,BufReader, BufWriter, Read, Seek, Write, BufRead};
 use std::path::Path;
 
-const CSV_FILE_NAME: &str = ".rtd.csv";
+const CSV_FILE_NAME: &str = "rtd.csv";
 type Result<T> = std::result::Result<T, io::Error>;
 
 pub fn add_item(item:Item) -> Result<()>{
@@ -84,6 +84,7 @@ impl Csv {
         //io.error不能用？隐式转换
         let home = env::var("HOME").unwrap();
         let filename = home + "/" + CSV_FILE_NAME;
+        println!("filename:{}", filename);
         Ok(filename)
     }
 
