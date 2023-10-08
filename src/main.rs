@@ -8,6 +8,8 @@ use clap::{Parser, ValueEnum};
 struct Args{
     #[arg(short, long, value_name="item-name")]
     add: Option<String>,
+    #[arg(short,long,value_name="item-id")]
+    complete: Option<u32>,
 }
 
 enum ListType{
@@ -26,4 +28,13 @@ fn main(){
             Err(e) => println!("Error: {}", e),
         }
     }
+
+    if let Some(id) = args.complete{
+        match service::complete_item(id){
+            Ok(s) => println!("Completed item: {}", s),
+            Err(e) => println!("Error: {}", e),
+        }
+    }
+
+
 }

@@ -18,6 +18,12 @@ pub fn add_item(item:Item) -> Result<()>{
     Ok(())
 }
 
+pub fn update_item(item:Item) -> Result<()>{
+    let to_update_item = get_item_by_id(item.id)?;
+    let offset = get_offset_by_id(item.id)?;
+    Csv::new()?.splice(offset as u64, to_update_item.to_string().len() as u64, &item.to_string())
+}
+
 #[allow(unused)]
 struct Csv{
     filename:String,
@@ -39,6 +45,22 @@ pub fn get_all() -> Result<Vec<Item>>{
         .lines()
         .filter_map(|line| line.parse::<Item>().ok())
         .collect())
+}
+
+pub fn get_item_by_id(id:u32) -> Result<Item>{
+    let content = Csv::new()?.content()?;
+    let item_str = content.lines().find(|line| {
+        if let Ok(item) = line.parse::<Item>() {
+            item.id() == id
+        } else {
+            false
+        }
+    });
+    if let Some(item_str) = item_str {
+        Ok(item_str.parse().unwrap())
+    }else {
+        Err(io::Error::new(io::ErrorKind::NotFound, "item not found"))
+    }
 }
 
 impl Csv {
@@ -93,9 +115,57 @@ impl Csv {
         self.file.read_to_string(&mut content)?;
         Ok(content)
     }
+
+    fn splice(&mut self, offset: u64, delete_size: u64, write_content: &str) -> Result<()> {
+        use std::io::SeekFrom;
+        let file = &self.file;
+
+        // Create a buffered reader form csv file
+        let mut reader = BufReader::new(file);
+
+        // Adjust the appropriate reading position
+        reader.seek(SeekFrom::Start(offset + delete_size))?;
+
+        // Save the rest of the file,
+        // starting at the position after the last character that was deleted
+        let mut rest_content = String::new();
+        reader.read_to_string(&mut rest_content)?;
+
+        // The final to be write content is spliced
+        // by the `write_content` and the `rest_content`
+        let write_content = write_content.to_owned() + &rest_content;
+
+        // Create a buffered writer from csv file
+        let mut writer = BufWriter::new(file);
+
+        // Adjust the appropriate writing position
+        writer.seek(SeekFrom::Start(offset))?;
+
+        // Insert `write_content` and overwrite old file content
+        writer.write_all(write_content.as_bytes())?;
+
+        // Make sure there is no redundant old file content left
+        file.set_len(offset + write_content.len() as u64)?;
+
+        Ok(())
+    }
 }
 
 
+fn get_offset_by_id(id:u32) ->Result<usize>{
+    let mut csv = Csv::new()?;
+    let content = csv.content()?;
+    let prev_lines = content.lines().take_while(|line| {
+        if let Ok(item) = line.parse::<Item>() {
+            item.id() != id
+        } else {
+            true
+        }
+    });
+
+    let offset = prev_lines.map(|line| line.len() + 1).sum();
+    Ok(offset)
+}
 
 // pub enum StorageError {
 //     FileHandle(FileHandleError),

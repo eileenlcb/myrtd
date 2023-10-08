@@ -29,6 +29,10 @@ impl Item {
     ) -> Self{
         Item { id, name: name.to_string(), completed, deleted, created_at, completed_at, deleted_at}
     }
+
+    pub fn id(&self) -> u32{
+        self.id
+    }
 }
 
 const ITEM_COUNT: usize = 7;
